@@ -1,0 +1,19 @@
+{
+  "loc.friendlyName": "Download Artifacts - External Build",
+  "loc.helpMarkDown": "",
+  "loc.description": "Download artifacts from VSTS\\TFS build",
+  "loc.instanceNameFormat": "Download Artifacts - External Build",
+  "loc.input.label.connection": "VSTS/Tfs Connection",
+  "loc.input.help.connection": "VSTS/Tfs connection",
+  "loc.input.label.project": "Project",
+  "loc.input.help.project": "Select the project name",
+  "loc.input.label.definition": "Build definition",
+  "loc.input.help.definition": "Select the build definition name",
+  "loc.input.label.version": "Build",
+  "loc.input.help.version": "Select the build number",
+  "loc.input.label.downloadPattern": "Download Filter",
+  "loc.input.help.downloadPattern": "Minmatch pattern to filter files to be downloaded.",
+  "loc.input.label.downloadPath": "Destination directory",
+  "loc.input.help.downloadPath": "Path on the agent machine where the artifact will be downloaded",
+  "loc.messages.DownloadArtifacts": "Downloading artifacts from : %s"
+}

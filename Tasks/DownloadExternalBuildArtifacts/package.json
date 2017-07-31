@@ -1,0 +1,9 @@
+{
+  "name": "DownloadBuildArtifacts",
+  "main": "download.js",
+  "dependencies": {
+    "vsts-task-lib" : "^2.0.3-preview",
+    "vso-node-api": "^6.2.5-preview",
+    "item-level-downloader": "1.0.3"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "loc.friendlyName": "Download Artifacts - Jenkins",
+  "loc.helpMarkDown": "",
+  "loc.description": "Download artifacts from jenkins job",
+  "loc.instanceNameFormat": "Download Artifacts - Jenkins",
+  "loc.input.label.connection": "Jenkins Connection",
+  "loc.input.help.connection": "Jenkins connection",
+  "loc.input.label.definition": "Jenkins Job",
+  "loc.input.help.definition": "Select the jenkins job",
+  "loc.input.label.version": "Build",
+  "loc.input.help.version": "Build Id",
+  "loc.input.label.downloadPattern": "Download Filter",
+  "loc.input.help.downloadPattern": "Minmatch pattern to filter files to be downloaded.",
+  "loc.input.label.downloadPath": "Destination directory",
+  "loc.input.help.downloadPath": "Path on the agent machine where the artifact will be downloaded",
+  "loc.messages.DownloadArtifacts": "Downloading artifacts from : %s"
+}
