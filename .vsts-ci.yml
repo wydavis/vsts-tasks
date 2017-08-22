@@ -5,7 +5,7 @@ phases:
   condition: and(succeeded(), not(variables.task))
   queue:
     demands: agent.os -equals Windows_NT
-    maxConcurrency: 5
+    parallel: 5
   steps:
 
   # Slice the tasks (sets TASK_ARRAY and TASK_PATTERN)
@@ -92,11 +92,11 @@ phases:
     inputs:
       artifactName: tasks5
 
-  - powershell: ./ci/download-individual-tasks.ps1
-    displayName: Download artifacts
+  # - powershell: ./ci/download-individual-tasks.ps1
+  #   displayName: Download artifacts
 
-  - script: npm install
-    displayName: npm install
+  # - script: npm install
+  #   displayName: npm install
 
   # mkdir nugetTest
   # cd nugetTest
