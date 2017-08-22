@@ -70,9 +70,8 @@ phases:
         variables.publish
       )
     )
-  queue:
-    variables:
-      system.enableAccessToken: true
+  variables:
+    system.enableAccessToken: true
   steps:
 
   # Download artifacts
