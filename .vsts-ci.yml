@@ -1,13 +1,11 @@
 phases:
 
 - phase: buildAll_windows
-  displayName: Build All Tasks (Windows)
+  displayName: Build all tasks (Windows)
   condition: and(succeeded(), not(variables.task))
-  # variables:
-  #   SYSTEM_TOTALJOBSINPHASE: 5
   queue:
     demands: agent.os -equals Windows_NT
-    maxConcurrency: 5
+    parallel: 5
   steps:
 
   # Slice the tasks (sets TASK_ARRAY and TASK_PATTERN)
@@ -18,13 +16,34 @@ phases:
   - script: npm install
     displayName: npm install
 
-  # Use node 5
-  - powershell: .\ci\use-node-5.ps1
-    displayName: Use node 5.10.1
-
   # Build
   - script: node make.js build --task "%TASK_PATTERN%"
     displayName: Build
+
+  # Zip and upload the build output
+  - powershell: |
+      $taskPaths = Get-ChildItem -LiteralPath .\_build\Tasks | Select-Object -ExpandProperty FullName
+      $zipPath = "$env:SYSTEM_DEFAULTWORKINGDIRECTORY\_build\tasks.zip"
+      Compress-Archive -Path $taskPaths -DestinationPath $zipPath
+      $artifactName = "tasks$env:SYSTEM_JOBPOSITIONINPHASE"
+      Write-Host "##vso[artifact.upload artifactName=$artifactName; containerFolder=$artifactName]$zipPath"
+
+- phase: testAll_windows
+  dependsOn: buildAll_windows
+  displayName: Test all tasks (Windows)
+  queue:
+    demands: agent.os -equals Windows_NT
+    maxConcurrency: 5
+    matrix:
+      node5_setQQQ:
+        nodeVersion: 5.10.1
+        task
+      node6_setQQQ:
+        nodeVersion: 6.10.3
+
+  # Use node 5
+  - powershell: .\ci\use-node-5.ps1
+    displayName: Use node 5.10.1
 
   # Upload artifacts before testing
   - powershell: .\ci\upload-individual-tasks.ps1
