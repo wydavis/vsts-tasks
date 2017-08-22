@@ -171,10 +171,11 @@ phases:
 #   #   displayName: Legacy tests
 
 - phase: abc
-  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/heads/ersciple'))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/heads/users'))
   steps:
   - script: echo hello
 
 - phase: def
   steps:
+  - checkout: none
   - script: set
