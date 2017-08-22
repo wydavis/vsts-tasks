@@ -5,7 +5,7 @@ phases:
   condition: and(succeeded(), not(variables.task))
   queue:
     demands: agent.os -equals Windows_NT
-    parallel: 5
+    maxConcurrency: 5
   steps:
 
   # Slice the tasks (sets TASK_ARRAY and TASK_PATTERN)
@@ -17,10 +17,10 @@ phases:
     displayName: npm install
 
   # Build
-  - script: node make.js build --task "%TASK_PATTERN%"
+  - script: node make.js build --task "$(task_pattern)"
     displayName: Build
 
-  # Zip and upload the build output
+  # Zip the build output
   - powershell: |
       $taskPaths = Get-ChildItem -LiteralPath .\_build\Tasks | Select-Object -ExpandProperty FullName
       $zipPath = "$env:SYSTEM_DEFAULTWORKINGDIRECTORY\_build\tasks.zip"
@@ -28,42 +28,22 @@ phases:
       $artifactName = "tasks$env:SYSTEM_JOBPOSITIONINPHASE"
       Write-Host "##vso[artifact.upload artifactName=$artifactName; containerFolder=$artifactName]$zipPath"
 
-- phase: testAll_windows
-  dependsOn: buildAll_windows
-  displayName: Test all tasks (Windows)
-  queue:
-    demands: agent.os -equals Windows_NT
-    maxConcurrency: 5
-    matrix:
-      node5_setQQQ:
-        nodeVersion: 5.10.1
-        task
-      node6_setQQQ:
-        nodeVersion: 6.10.3
+  # Publish artifact
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: _build/tasks.zip
+      artifactName: tasks$(system.jobPositionInPhase)
+      artifactType: container
 
-  # Use node 5
-  - powershell: .\ci\use-node-5.ps1
-    displayName: Use node 5.10.1
-
-  # Upload artifacts before testing
-  - powershell: .\ci\upload-individual-tasks.ps1
-    displayName: Upload artifacts
-    condition: |
-      and(
-        succeeded(),
-        or(
-          startsWith(variables['build.sourceBranch'], 'refs/heads/releases/'),
-          variables.publish
-        )
-      )
-
-  # oops tests might run before the upload queue drains
+  # Prepend node
+  - powershell: .\ci\use-node-5.ps1 # switch to NodeTool task when bug fix is deployed
+    displayName: Use node $(node_version)
 
   # Test
   - script: node make.js test
     displayName: Test
 
-  - script: node make.js testLegacy --task "%TASK_PATTERN%"
+  - script: node make.js testLegacy --task "$(task_pattern)"
     displayName: Legacy tests
 
   # Use node 6
@@ -76,7 +56,7 @@ phases:
   - script: node make.js test --runner ts
     displayName: Test
 
-  - script: node make.js testLegacy --runner ts --task "%TASK_PATTERN%"
+  - script: node make.js testLegacy --runner ts --task "$(task_pattern)"
     displayName: Legacy tests
 
 - phase: publish_windows
@@ -94,6 +74,23 @@ phases:
     variables:
       system.enableAccessToken: true
   steps:
+
+  # Download artifacts
+  - task: DownloadBuildArtifact@0
+    inputs:
+      artifactName: tasks1
+  - task: DownloadBuildArtifact@0
+    inputs:
+      artifactName: tasks2
+  - task: DownloadBuildArtifact@0
+    inputs:
+      artifactName: tasks3
+  - task: DownloadBuildArtifact@0
+    inputs:
+      artifactName: tasks4
+  - task: DownloadBuildArtifact@0
+    inputs:
+      artifactName: tasks5
 
   - powershell: ./ci/download-individual-tasks.ps1
     displayName: Download artifacts

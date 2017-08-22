@@ -6,5 +6,5 @@ var tasks = makeOptions.tasks.filter(function (val, index) {
     return i % parseInt(process.env.SYSTEM_TOTALJOBSINPHASE) == parseInt(process.env.SYSTEM_JOBPOSITIONINPHASE) - 1;
 });
 
-console.log('##vso[task.setVariable variable=TASK_PATTERN]@(' + tasks.join('|') + ')');
-console.log('##[task.setVariable variable=TASK_ARRAY]' + JSON.stringify(tasks));
+console.log('##vso[task.setVariable variable=task_pattern]@(' + tasks.join('|') + ')');
+console.log('##[task.setVariable variable=task_array]' + JSON.stringify(tasks));
