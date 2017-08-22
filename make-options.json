@@ -1,9 +1,7 @@
 {
     "tasks": [
-        "Bash",
+        "PublishBuildArtifacts",
         "CmdLine",
-        "NodeTool",
-        "powerShell",
         "VSBuild"
     ],
     "_tasks": [

@@ -5,7 +5,7 @@ phases:
   condition: and(succeeded(), not(variables.task))
   queue:
     demands: agent.os -equals Windows_NT
-    parallel: 5
+    parallel: 3
   steps:
 
   # Slice the tasks (sets TASK_ARRAY and TASK_PATTERN)
