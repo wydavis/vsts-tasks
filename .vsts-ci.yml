@@ -22,6 +22,7 @@ phases:
 
   # Zip the build output
   - powershell: Compress-Archive -Path _build\Tasks\* -DestinationPath _build\tasks.zip
+    displayName: Zip build output
 
   # Publish artifact
   - task: PublishBuildArtifacts@1

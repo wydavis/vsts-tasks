@@ -1,8 +1,8 @@
 {
     "tasks": [
-        "PublishBuildArtifacts",
+        "Bash",
         "CmdLine",
-        "VSBuild"
+        "powerShell"
     ],
     "_tasks": [
         "AndroidSigning",
