@@ -4,7 +4,6 @@ var makeOptionsPath = path.join(__dirname, '..', 'make-options.json');
 var makeOptions = JSON.parse(fs.readFileSync(makeOptionsPath).toString())
 console.log('SYSTEM_TOTALJOBSINPHASE: ' + process.env.SYSTEM_TOTALJOBSINPHASE);
 console.log('SYSTEM_JOBPOSITIONINPHASE: ' + process.env.SYSTEM_JOBPOSITIONINPHASE);
-console.log('makeOptions: ' + JSON.stringify(makeOptions));
 var tasks = makeOptions.tasks.filter(function (val, index) {
     return index % parseInt(process.env.SYSTEM_TOTALJOBSINPHASE) == parseInt(process.env.SYSTEM_JOBPOSITIONINPHASE) - 1;
 });

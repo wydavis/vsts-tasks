@@ -21,12 +21,7 @@ phases:
     displayName: Build
 
   # Zip the build output
-  - powershell: |
-      $taskPaths = Get-ChildItem -LiteralPath .\_build\Tasks | Select-Object -ExpandProperty FullName
-      $zipPath = "$env:SYSTEM_DEFAULTWORKINGDIRECTORY\_build\tasks.zip"
-      Compress-Archive -Path $taskPaths -DestinationPath $zipPath
-      $artifactName = "tasks$env:SYSTEM_JOBPOSITIONINPHASE"
-      Write-Host "##vso[artifact.upload artifactName=$artifactName; containerFolder=$artifactName]$zipPath"
+  - powershell: Compress-Archive -Path _build\Tasks\* -DestinationPath _build\tasks.zip
 
   # Publish artifact
   - task: PublishBuildArtifacts@1
