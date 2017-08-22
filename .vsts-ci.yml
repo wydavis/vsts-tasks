@@ -171,6 +171,6 @@ phases:
   #   displayName: Legacy tests
 
 - phase: asdf
-  condition: and(succeeded(), startsWith(variables[build.sourceBranch], 'refs/heads/ersciple'))
+  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/heads/ersciple'))
   steps:
   - script: echo hello
