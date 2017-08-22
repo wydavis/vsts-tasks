@@ -101,7 +101,7 @@ phases:
   # $version = "0.$('{0:yyyyMMdd}' -f $now).$([System.Math]::Floor($now.timeofday.totalseconds))-m123-commit"
   # $nuspecContent = @"
   # <?xml version="1.0"?>
-  # <package >
+  # <package>
   #   <metadata>
   #     <id>vsts-tasks</id>
   #     <version>$version</version>
@@ -131,41 +131,46 @@ phases:
     demands: agent.os -equals Windows_NT
   steps:
 
-  # npm install
-  - script: npm install
-    displayName: npm install
+  # # npm install
+  # - script: npm install
+  #   displayName: npm install
 
-  # Use node 5
-  - powershell: .\ci\use-node-5.ps1
-    displayName: Use node 5.10.1
+  # # Use node 5
+  # - powershell: .\ci\use-node-5.ps1
+  #   displayName: Use node 5.10.1
 
-  # Build
-  - script: node make.js build --task "$(task)"
-    displayName: Build
+  # # Build
+  # - script: node make.js build --task "$(task)"
+  #   displayName: Build
 
-  # Upload artifacts before testing
-  - powershell: .\ci\upload-individual-tasks.ps1
-    displayName: Upload artifacts
-    condition: and(succeeded(), variables[BUILD_SOURCEBRANCH])
+  # # Upload artifacts before testing
+  # - powershell: .\ci\upload-individual-tasks.ps1
+  #   displayName: Upload artifacts
+  #   condition: and(succeeded(), variables[BUILD_SOURCEBRANCH])
 
-  # oops tests might run before the upload queue drains
+  # # oops tests might run before the upload queue drains
 
-  # Test
-  - script: node make.js test
-    displayName: Test
+  # # Test
+  # - script: node make.js test
+  #   displayName: Test
 
-  - script: node make.js testLegacy --task "$(task)"
-    displayName: Legacy tests
+  # - script: node make.js testLegacy --task "$(task)"
+  #   displayName: Legacy tests
 
-  # Use node 6
-  - task: NodeTool@0
-    displayName: Use node 6.10.3
-    inputs:
-      versionSpec: "6.10.3"
+  # # Use node 6
+  # - task: NodeTool@0
+  #   displayName: Use node 6.10.3
+  #   inputs:
+  #     versionSpec: "6.10.3"
 
-  # Test
-  - script: node make.js test --runner ts
-    displayName: Test
+  # # Test
+  # - script: node make.js test --runner ts
+  #   displayName: Test
 
-  - script: node make.js testLegacy --runner ts --task "$(task)"
-    displayName: Legacy tests
+  # - script: node make.js testLegacy --runner ts --task "$(task)"
+  #   displayName: Legacy tests
+
+- phase: asdf
+  condition: and(succeeded(), startsWith(variables[build.sourceBranch], 'refs/heads/ersciple'))
+  steps:
+  - script: echo hello
