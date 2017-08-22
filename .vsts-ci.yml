@@ -129,7 +129,7 @@ phases:
   condition: and(succeeded(), variables.task)
   queue:
     demands: agent.os -equals Windows_NT
-  steps:
+  steps: []
 
   # # npm install
   # - script: npm install
