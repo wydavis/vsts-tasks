@@ -1,5 +1,12 @@
 {
-    "tasks": [
+    "_tasks": [
+        "Bash",
+        "CmdLine",
+        "NodeTool",
+        "powerShell",
+        "VSBuild"
+    ],
+    "_tasks": [
         "AndroidSigning",
         "ANT",
         "ArchiveFiles",
