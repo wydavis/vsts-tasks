@@ -64,6 +64,22 @@ phases:
     system.enableAccessToken: true
   steps:
 
+  # Set variables
+  - powershell: |
+      $publishCurrentMilestone = ''
+      if ($env:BUILD_SOURCEBRANCH -match '$refs/heads/releases/m[0-9]+^') {
+        $publishCurrentMilestone = 'true'
+      }
+
+      Write-Host "##vso[task.setVariable variable=publish_current_milestone]$publishCurrentMilestone"
+
+      $publishAggregate = ''
+      if ($env:PUBLISH -or $env:BUILD_SOURCEBRANCH -like 'refs/heads/releases/*') {
+        $publishAggregate = 'true'
+      }
+
+      Write-Host "##vso[task.setVariable variable=publish_aggregate]$publishAggregate"
+
   # Download artifacts
   - task: DownloadBuildArtifact@0
     inputs:
@@ -88,26 +104,21 @@ phases:
   # Use NuGet 4
   - task: NuGetToolInstaller@0
     displayName: Use NuGet 4
-    condition: |
-      and(
-        succeeded(),
-        or(variables.publish, startsWith(variables['build.sourceBranch'], 'refs/heads/releases/')))
+    condition: and(succeeded(), or(variables.publish_current_milestone, variables.publish_aggregate))
     inputs:
       versionSpec: 4.0.0
 
   # Pack current milestone
-  - script: |
-      cd _package
-      nuget pack vsts-tasks-milestone.nuspec -BasePath current-milestone-layout -NoDefaultExcludes
+  - script: nuget pack vsts-tasks-milestone.nuspec -BasePath current-milestone-layout -NoDefaultExcludes
     displayName: Pack current milestone
-    condition: |
-      and(
-        succeeded(),
-        or(variables.publish, startsWith(variables['build.sourceBranch'], 'refs/heads/releases/')))
+    condition: and(succeeded(), variables.publish_current_milestone)
+    workingDirectory: _package
 
   # Publish current milestone package (CONDITIONAL)
 
   # Generate packages.config for previous milestones
+  - script: node .\ci\create-restore-config.js
+    displayName: Create restore config
 
   # Restore previous milestones
 
@@ -118,33 +129,8 @@ phases:
   # Publish aggregate package layout
 
 
-  # mkdir nugetTest
-  # cd nugetTest
   # $now = [System.DateTime]::UtcNow
   # $version = "0.$('{0:yyyyMMdd}' -f $now).$([System.Math]::Floor($now.timeofday.totalseconds))-m123-commit"
-  # $nuspecContent = @"
-  # <?xml version="1.0"?>
-  # <package>
-  #   <metadata>
-  #     <id>vsts-tasks</id>
-  #     <version>$version</version>
-  #     <authors>vsts</authors>
-  #     <owners>vsts</owners>
-  #     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-  #     <description>vsts-tasks</description>
-  #     <releaseNotes>vsts-tasks</releaseNotes>
-  #     <copyright>Copyright 2017</copyright>
-  #     <tags />
-  #     <dependencies />
-  #   </metadata>
-  # </package>
-  # "@
-  # $nuspecContent | Out-File -FilePath vsts-tasks.nuspec -Encoding utf8
-
-  # mkdir contentLayout
-  # mkdir contentLayout/content
-  # "hello world" > contentLayout/content/hello.txt
-  # nuget pack vsts-tasks.nuspec -BasePath contentLayout -NoDefaultExcludes
   # ##vso[build.updatebuildnumber]build number
 
 # <?xml version="1.0" encoding="utf-8"?>

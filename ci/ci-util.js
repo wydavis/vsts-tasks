@@ -19,11 +19,13 @@ var buildPath = path.join(__dirname, '..', '_build');
 var packagePath = path.join(__dirname, '..', '_package');
 var packageSliceZipName = 'package-slice.zip';
 var currentMilestoneLayoutPath = path.join(packagePath, 'current-milestone-layout', 'contents');
+var restorePath = path.join(packagePath, 'restore');
 var aggregateLayoutPath = path.join(packagePath, 'aggregate-layout');
 exports.buildPath = buildPath;
 exports.packagePath = packagePath;
 exports.packageSliceZipName = packageSliceZipName;
 exports.currentMilestoneLayoutPath = currentMilestoneLayoutPath;
+exports.restorePath = restorePath;
 exports.aggregateLayoutPath = aggregateLayoutPath;
 
 // var downloadPath = path.join(__dirname, '_download');

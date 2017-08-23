@@ -40,26 +40,24 @@ for (var i = 0; i < artifactNames.length; i++) {
 // get the branch/commit info
 var refs = util.getRefs();
 assert(refs.head.commit, 'refs.head.commit');
-assert(refs.head.branch, 'refs.head.branch');
-var lastBranchSegment = refs.head.branch.split('/').reverse()[0];
-assert(lastBranchSegment, 'lastBranchSegment');
-
-// create the nuspec file
-var nuspecContent =
-    `<?xml version="1.0"?>`
-    + `\n<package>`
-    + `\n  <metadata>`
-    + `\n    <id>vsts-tasks-milestone</id>`
-    + `\n    <version>0.1.0-${lastBranchSegment}-${refs.head.commit}</version>`
-    + `\n    <authors>vsts</authors>`
-    + `\n    <owners>vsts</owners>`
-    + `\n    <requireLicenseAcceptance>false</requireLicenseAcceptance>`
-    + `\n    <description>vsts-tasks</description>`
-    + `\n    <releaseNotes>vsts-tasks</releaseNotes>`
-    + `\n    <copyright>Copyright 2017</copyright>`
-    + `\n    <tags />`
-    + `\n    <dependencies />`
-    + `\n  </metadata>`
-    + `\n</package>`;
-var nuspecPath = path.join(util.packagePath, 'vsts-tasks-milestone.nuspec');
-fs.writeFileSync(nuspecPath, nuspecContent);
+if (refs.head.release) {
+    // create the nuspec file
+    var nuspecContent =
+        `<?xml version="1.0"?>`
+        + `\n<package>`
+        + `\n  <metadata>`
+        + `\n    <id>vsts-tasks-milestone</id>`
+        + `\n    <version>0.1.0-m${refs.head.release}-${refs.head.commit}</version>`
+        + `\n    <authors>vsts</authors>`
+        + `\n    <owners>vsts</owners>`
+        + `\n    <requireLicenseAcceptance>false</requireLicenseAcceptance>`
+        + `\n    <description>vsts-tasks</description>`
+        + `\n    <releaseNotes>vsts-tasks</releaseNotes>`
+        + `\n    <copyright>Copyright 2017</copyright>`
+        + `\n    <tags />`
+        + `\n    <dependencies />`
+        + `\n  </metadata>`
+        + `\n</package>`;
+    var nuspecPath = path.join(util.packagePath, 'vsts-tasks-milestone.nuspec');
+    fs.writeFileSync(nuspecPath, nuspecContent);
+}
