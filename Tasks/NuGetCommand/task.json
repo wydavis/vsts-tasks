@@ -9,7 +9,7 @@
     "version": {
         "Major": 2,
         "Minor": 0,
-        "Patch": 6
+        "Patch": 7
     },
     "runsOn": [
         "Agent",
@@ -274,6 +274,19 @@
             }
         },
         {
+            "name": "byPrereleaseNumberOverrideChoice",
+            "type": "pickList",
+            "label": "Override package Major.Minor.Patch version",
+            "defaultValue": "off",
+            "required": true,
+            "groupName": "packOptions",
+            "options": {
+                "Override": "Override package Major.Minor.Patch versions",
+                "NoOverride": "Do not override package Major.Minor.Patch versions"
+            },
+            "visibleRule": "versioningScheme = byPreleaseNumber"
+        },
+        {
             "name": "includeReferencedProjects",
             "type": "boolean",
             "label": "Include referenced projects",
@@ -300,7 +313,7 @@
             "helpMarkDown": "The 'X' in version [X.Y.Z](http://semver.org/spec/v1.0.0.html)",
             "required": true,
             "groupName": "packOptions",
-            "visibleRule": "versioningScheme = byPrereleaseNumber"
+            "visibleRule": "byPrereleaseNumberOverrideChoice = Override"
         },
         {
             "name": "requestedMinorVersion",
@@ -310,7 +323,7 @@
             "helpMarkDown": "The 'Y' in version [X.Y.Z](http://semver.org/spec/v1.0.0.html)",
             "required": true,
             "groupName": "packOptions",
-            "visibleRule": "versioningScheme = byPrereleaseNumber"
+            "visibleRule": "byPrereleaseNumberOverrideChoice = Override"
         },
         {
             "name": "requestedPatchVersion",
@@ -320,7 +333,7 @@
             "helpMarkDown": "The 'Z' in version [X.Y.Z](http://semver.org/spec/v1.0.0.html)",
             "required": true,
             "groupName": "packOptions",
-            "visibleRule": "versioningScheme = byPrereleaseNumber"
+            "visibleRule": "byPrereleaseNumberOverrideChoice = Override"
         },
         {
             "name": "packTimezone",
@@ -335,6 +348,20 @@
                 "local": "Agent local time"
             },
             "visibleRule": "versioningScheme = byPrereleaseNumber"
+        },
+        {
+            "name": "packTimezone",
+            "type": "pickList",
+            "label": "Time zone",
+            "defaultValue": "utc",
+            "helpMarkDown": "Specifies the desired time zone used to produce the version of the package. Selecting UTC is recommended if you're using hosted build agents as their date and time might differ.",
+            "required": "false",
+            "groupName": "packOptions",
+            "options": {
+                "utc": "UTC",
+                "local": "Agent local time"
+            },
+            "visibleRule": "versioningScheme = byPrereleaseNumberSuffixOnly"
         },
         {
             "name": "includeSymbols",

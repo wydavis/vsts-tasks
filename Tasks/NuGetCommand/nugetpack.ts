@@ -12,6 +12,7 @@ class PackOptions implements INuGetCommandOptions {
         public outputDir: string,
         public includeReferencedProjects: boolean,
         public version: string,
+        public suffix: string,
         public properties: string[],
         public createSymbolsPackage: boolean,
         public verbosity: string,
@@ -55,6 +56,7 @@ export async function run(nuGetPath: string): Promise<void> {
         }
 
         let version: string = undefined;
+        let suffix: string = undefined;
         switch(versioningScheme)
         {
             case "off":
@@ -62,8 +64,17 @@ export async function run(nuGetPath: string): Promise<void> {
             case "byPrereleaseNumber":
                 tl.debug(`Getting prerelease number`);
 
-                let nowDateTimeString = packUtils.getNowDateString(timezone);
-                version = `${majorVersion}.${minorVersion}.${patchVersion}-CI-${nowDateTimeString}`;
+                if (tl.getInput("byPrereleaseNumberOverrideChoice") == "Override")
+                {
+                    let nowDateTimeString = packUtils.getNowDateString(timezone);
+                    version = `${majorVersion}.${minorVersion}.${patchVersion}-CI-${nowDateTimeString}`;
+                }
+                else
+                {
+                    let nowDateTimeString = packUtils.getNowDateString(timezone);
+                    suffix = `-CI-${nowDateTimeString}`;
+                }
+
                 break;
             case "byEnvVar":
                 tl.debug(`Getting version from env var: ${versionEnvVar}`);
@@ -148,6 +159,7 @@ export async function run(nuGetPath: string): Promise<void> {
             outputDir,
             includeRefProj,
             version,
+            suffix,
             props,
             createSymbolsPackage,
             verbosity,
@@ -192,6 +204,11 @@ function packAsync(file: string, options: PackOptions): Q.Promise<number> {
         nugetTool.arg("-version");
         nugetTool.arg(options.version);
     }
+    
+    if (options.suffix) {
+        nugetTool.arg("-suffix");
+        nugetTool.arg(options.suffix);
+    }
 
     if (options.verbosity && options.verbosity !== "-") {
         nugetTool.arg("-Verbosity");
@@ -200,3 +217,4 @@ function packAsync(file: string, options: PackOptions): Q.Promise<number> {
 
     return nugetTool.exec();
 }
+
