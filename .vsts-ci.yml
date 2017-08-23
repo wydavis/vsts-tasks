@@ -22,6 +22,7 @@ phases:
 
   # Package the slice
   - script: node .\ci\create-package-slice.js
+    displayName: Create package slice
 
   # Publish as an artifact
   - task: PublishBuildArtifacts@1
@@ -57,14 +58,6 @@ phases:
 - phase: publish_windows
   displayName: Publish
   dependsOn: buildAll_windows
-  condition: |
-    and(
-      succeeded(),
-      or(
-        startsWith(variables['build.sourceBranch'], 'refs/heads/releases/'),
-        variables.publish
-      )
-    )
   queue:
     demands: agent.os -equals Windows_NT
   variables:
@@ -74,25 +67,42 @@ phases:
   # Download artifacts
   - task: DownloadBuildArtifact@0
     inputs:
-      artifactName: tasks1
+      artifactName: package-slice-1
   - task: DownloadBuildArtifact@0
     inputs:
-      artifactName: tasks2
+      artifactName: package-slice-2
   # - task: DownloadBuildArtifact@0
   #   inputs:
-  #     artifactName: tasks3
+  #     artifactName: package-slice-3
   # - task: DownloadBuildArtifact@0
   #   inputs:
-  #     artifactName: tasks4
+  #     artifactName: package-slice-4
   # - task: DownloadBuildArtifact@0
   #   inputs:
-  #     artifactName: tasks5
+  #     artifactName: package-slice-5
 
-  # - powershell: ./ci/download-individual-tasks.ps1
-  #   displayName: Download artifacts
+  # Use NuGet 4
 
-  # - script: npm install
-  #   displayName: npm install
+  # Create current milestone layout
+  - script: node .\ci\create-current-milestone-layout.js
+    displayName: Create current milestone layout
+
+  # Write current milestone .nuspec - add to above step
+
+  # Pack current milestone - add to above step
+
+  # Publish current milestone package (CONDITIONAL)
+
+  # Generate packages.config for previous milestones
+
+  # Restore previous milestones
+
+  # Create aggregate layout (and write .nuspec and pack)
+
+  # Publish aggregate package (CONDITIONAL)
+
+  # Publish aggregate package layout
+
 
   # mkdir nugetTest
   # cd nugetTest
@@ -122,6 +132,31 @@ phases:
   # "hello world" > contentLayout/content/hello.txt
   # nuget pack vsts-tasks.nuspec -BasePath contentLayout -NoDefaultExcludes
   # ##vso[build.updatebuildnumber]build number
+
+# <?xml version="1.0" encoding="utf-8"?>
+# <packages>
+#   <package id="Microsoft.CodeDom.Providers.DotNetCompilerPlatform" version="1.0.0" targetFramework="net46" />
+#   <package id="Microsoft.Net.Compilers" version="1.0.0" targetFramework="net46" developmentDependency="true" />
+#   <package id="Microsoft.Web.Infrastructure" version="1.0.0.0" targetFramework="net46" />
+#   <package id="Microsoft.Web.Xdt" version="2.1.1" targetFramework="net46" />
+#   <package id="Newtonsoft.Json" version="8.0.3" allowedVersions="(8,10]" targetFramework="net46" />
+#   <package id="NuGet.Core" version="2.11.1" targetFramework="net46" />
+#   <package id="NuGet.Server" version="2.11.2" targetFramework="net46" />
+#   <package id="RouteMagic" version="1.3" targetFramework="net46" />
+#   <package id="WebActivatorEx" version="2.1.0" targetFramework="net46" />
+# </packages>
+
+
+
+
+  # condition: |
+  #   and(
+  #     succeeded(),
+  #     or(
+  #       startsWith(variables['build.sourceBranch'], 'refs/heads/releases/'),
+  #       variables.publish
+  #     )
+  #   )
 
 - phase: buildSingle_windows
   displayName: Build Single Task (Windows)

@@ -11,11 +11,22 @@ var ncp = require('child_process');
 // var shell = require('shelljs');
 // var syncRequest = require('sync-request');
 
+//------------------------------------------------------------------------------
 // global paths
+//------------------------------------------------------------------------------
+
 var buildPath = path.join(__dirname, '..', '_build');
 var packagePath = path.join(__dirname, '..', '_package');
 var packageSliceZipName = 'package-slice.zip';
-    // var downloadPath = path.join(__dirname, '_download');
+var currentMilestoneLayoutPath = path.join(packagePath, 'current-milestone-layout');
+var aggregateLayoutPath = path.join(packagePath, 'aggregate-layout');
+exports.buildPath = buildPath;
+exports.packagePath = packagePath;
+exports.packageSliceZipName = packageSliceZipName;
+exports.currentMilestoneLayoutPath = currentMilestoneLayoutPath;
+exports.aggregateLayoutPath = aggregateLayoutPath;
+
+// var downloadPath = path.join(__dirname, '_download');
 
 // var makeOptions = require('./make-options.json');
 
@@ -288,7 +299,7 @@ var cleanPackagePath = function () {
         }
     }
 
-    fs.mkdir(packagePath);
+    fs.mkdirSync(packagePath);
 }
 
 // var rmRF = function (path) {
@@ -923,12 +934,20 @@ var linkNonAggregatedLayoutContent = function (sourceRoot, destRoot, metadataOnl
 var compressTasks = function (sourceRoot, destPath, individually) {
     assert(sourceRoot, 'sourceRoot');
     assert(destPath, 'destPath');
-    run(
-        `powershell.exe -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "& '${path.join(__dirname, 'compress-tasks.ps1')}' -SourceRoot '${sourceRoot}' -TargetPath '${destPath}' -Individually:${individually ? '$true' : '$false'}"`,
+    run(`powershell.exe -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "& '${path.join(__dirname, 'compress-tasks.ps1')}' -SourceRoot '${sourceRoot}' -TargetPath '${destPath}' -Individually:${individually ? '$true' : '$false'}"`,
         /*inheritStreams:*/true,
         /*noHeader*/true);
 }
 exports.compressTasks = compressTasks;
+
+var expandTasks = function (zipPath, targetPath) {
+    assert(zipPath, 'zipPath');
+    assert(targetPath, 'targetPath');
+    run(`powershell.exe -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "& '${path.join(__dirname, 'expand-tasks.ps1')}' -ZipPath '${zipPath}' -TargetPath '${destPath}'"`,
+        /*inheritStreams:*/false,
+        /*noHeader*/true);
+}
+exports.expandTasks = expandTasks;
 
 // var createNonAggregatedZip = function (buildPath, packagePath) {
 //     assert(buildPath, 'buildPath');

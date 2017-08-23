@@ -1,4 +1,3 @@
-var fs = require('fs');
 var path = require('path');
 var util = require('./ci-util');
 
@@ -22,20 +21,8 @@ console.log();
 console.log('> Linking metadata content for package slice');
 util.linkNonAggregatedLayoutContent(util.buildPath, packageSliceLayoutPath, /*metadataOnly*/true);
 
-//     // mark the layout with a version number.
-//     // servicing supports both this new format and the legacy layout format as well.
-//     fs.writeFileSync(path.join(packageSliceLayoutPath, 'layout-version.txt'), '2');
-
 // zip the package slice
 console.log();
 console.log('> Zipping the package slice')
 var packageSliceZipPath = path.join(util.packagePath, util.packageSliceZipName)
 util.compressTasks(packageSliceLayoutPath, packageSliceZipPath);
-
-//     // create the non-aggregated tasks zip
-//     console.log();
-//     console.log('> Zipping non-aggregated tasks layout');
-//     var nonAggregatedZipPath = path.join(packagePath, 'non-aggregated-tasks.zip');
-//     compressTasks(packageSliceLayoutPath, nonAggregatedZipPath);
-// }
-// exports.createNonAggregatedZip = createNonAggregatedZip;
