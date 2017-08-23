@@ -249,12 +249,7 @@ exports.assert = assert;
 // }
 // exports.matchCopy = matchCopy;
 
-var run = function (cl, inheritStreams, noHeader) {
-    if (!noHeader) {
-        console.log();
-        console.log('> ' + cl);
-    }
-
+var run = function (cl, inheritStreams) {
     var options = {
         stdio: inheritStreams ? 'inherit' : 'pipe'
     };
@@ -268,15 +263,24 @@ var run = function (cl, inheritStreams, noHeader) {
             console.error(err.output ? err.output.toString() : err.message);
         }
 
-        process.exit(1);
+        throw new Error(`The following command line failed: 'cl'`);
     }
 
-    return (output || '').toString().trim();
+    output = (output || '').toString().trim();
+    if (!inheritStreams) {
+        console.log(output);
+    }
+
+    return output;
 }
 exports.run = run;
 
 var cleanPackagePath = function () {
     assert(packagePath, 'packagePath');
+    if (process.platform != 'win32') {
+        throw new Error(`Function 'cleanPackagePath' not supported on platform '${process.platform}'.`);
+    }
+
     var lstats;
     try {
         lstats = fs.lstatSync(path);
@@ -292,7 +296,7 @@ var cleanPackagePath = function () {
         try {
             originalWorkingDirectory = process.cwd();
             process.chdir(path.dirname(packagePath));
-            run(`rmdir /s /q ${path.basename(packagePath)}`);
+            run(`rmdir /s /q ${path.basename(packagePath)}`, /*inheritStreams:*/true);
         }
         finally {
             if (originalWorkingDirectory) {
@@ -868,7 +872,7 @@ var linkNonAggregatedLayoutContent = function (sourceRoot, destRoot, metadataOnl
 //     return destPath;
 // }
 
-var getRefs = function () {
+var getRefs = function (omitReleases) {
     console.log();
     console.log('> Getting branch/commit info')
     var info = {};
@@ -882,11 +886,11 @@ var getRefs = function () {
         // assumes user has checked out a branch. this is a fairly safe assumption.
         // this code only runs during "package" and "publish" build targets, which
         // is not typically run locally.
-        branch = run('git symbolic-ref HEAD', /*inheritStreams*/false, /*noHeader*/true);
+        branch = run('git symbolic-ref HEAD');
     }
 
     assert(branch, 'branch');
-    var commit = run('git rev-parse --short=8 HEAD', /*inheritStreams*/false, /*noHeader*/true);
+    var commit = run('git rev-parse --short=8 HEAD');
     var release;
     if (branch.match(/^(refs\/heads\/)?releases\/m[0-9]+$/)) {
         release = parseInt(branch.split('/').pop().substr(1));
@@ -902,32 +906,72 @@ var getRefs = function () {
         releases: {}
     };
 
-    // get the ref info for each release branch within range
-    run('git branch --list --remotes "origin/releases/m*"', /*inheritStreams*/false, /*noHeader*/true)
-        .split('\n')
-        .forEach(function (branch) {
-            branch = branch.trim();
-            if (!branch.match(/^origin\/releases\/m[0-9]+$/)) {
-                return;
-            }
+    if (!omitReleases) {
+        var headIntersectionWithMaster = null;
 
-            var release = parseInt(branch.split('/').pop().substr(1));
+        // get the ref info for each release branch within range
+        run('git branch --list --remotes "origin/releases/m*"')
+            .split('\n')
+            .forEach(function (branch) {
+                branch = branch.trim();
+                if (!branch.match(/^origin\/releases\/m[0-9]+$/)) {
+                    return;
+                }
 
-            // filter out releases less than 108 and greater than HEAD
-            if (release < 108 ||
-                release > (info.head.release || 999)) {
+                var release = parseInt(branch.split('/').pop().substr(1));
 
-                return;
-            }
+                // filter out releases less than 108 and greater than HEAD
+                if (release < 108 ||
+                    release > (info.head.release || 999)) {
 
-            branch = 'refs/remotes/' + branch;
-            var commit = run(`git rev-parse --short=8 "${branch}"`, /*inheritStreams*/false, /*noHeader*/true);
-            info.releases[release] = {
-                branch: branch,
-                commit: commit,
-                release: release
-            };
-        });
+                    return;
+                }
+
+                // when not building a release branch, leverage the git graph to determine which release branches to include.
+                // filter out releases where the intersection with master is ahead of (or equal to) HEAD's intersection with master
+                // example:
+                //   master
+                //   |
+                //   |    releases/m122 // should be filtered out
+                //   |    |
+                //   |-----    releases/m121 // should be filtered out
+                //   |         |
+                //   |         |    releases/tfs2018rc1 (HEAD)
+                //   |         |    |
+                //   |         |-----
+                //   |         |
+                //   |----------         releases/m120 // should be included
+                //   |                   |
+                //   |--------------------
+                //   |
+                if (!info.head.release) {
+                    // determine the commit where HEAD intersects with master
+                    if (!headIntersectionWithMaster) {
+                        headIntersectionWithMaster = run('git merge-base HEAD origin/master');
+                        assert(headIntersectionWithMaster, 'headIntersectionWithMaster');
+                    }
+
+                    // determine the commit where the release branch intersects with origin/master
+                    var releaseIntersectionWithMaster = run(`git merge-base ${branch} origin/master`);
+                    assert(releaseIntersectionWithMaster, 'releaseIntersectionWithMaster');
+
+                    // determine whether the commit head-intersection-with-master is ahead of the commit release-branch-intersection-with-master
+                    var isPreviousReleaseBranch = run(`git rev-list --max-count 1 ${releaseIntersectionWithMaster}..${headIntersectionWithMaster}`);
+                    if (!revListOutput) {
+                        // the commit release-branch-intersection-with-master is ahead of (or equal to) the commit head-intersection-with-master
+                        return;
+                    }
+                }
+
+                branch = 'refs/remotes/' + branch;
+                var commit = run(`git rev-parse --short=8 "${branch}"`);
+                info.releases[release] = {
+                    branch: branch,
+                    commit: commit,
+                    release: release
+                };
+            });
+    }
 
     return info;
 }
@@ -937,8 +981,7 @@ var compressTasks = function (sourceRoot, destPath, individually) {
     assert(sourceRoot, 'sourceRoot');
     assert(destPath, 'destPath');
     run(`powershell.exe -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "& '${path.join(__dirname, 'compress-tasks.ps1')}' -SourceRoot '${sourceRoot}' -TargetPath '${destPath}' -Individually:${individually ? '$true' : '$false'}"`,
-        /*inheritStreams:*/true,
-        /*noHeader*/true);
+        /*inheritStreams:*/true);
 }
 exports.compressTasks = compressTasks;
 
@@ -946,8 +989,7 @@ var expandTasks = function (zipPath, targetPath) {
     assert(zipPath, 'zipPath');
     assert(targetPath, 'targetPath');
     run(`powershell.exe -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "& '${path.join(__dirname, 'expand-tasks.ps1')}' -ZipPath '${zipPath}' -TargetPath '${destPath}'"`,
-        /*inheritStreams:*/false,
-        /*noHeader*/true);
+        /*inheritStreams:*/false);
 }
 exports.expandTasks = expandTasks;
 
