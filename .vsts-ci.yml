@@ -1,181 +1,180 @@
 phases:
 
-# - phase: buildAll_windows
-#   displayName: Build all tasks (Windows)
-#   condition: and(succeeded(), not(variables.task))
-#   queue:
-#     demands: agent.os -equals Windows_NT
-#     parallel: 2
-#   steps:
-
-#   # Slice the tasks (sets TASK_ARRAY and TASK_PATTERN)
-#   - script: node .\ci\set-task-slice.js
-#     displayName: Set task slice
-
-#   # npm install
-#   - script: npm install
-#     displayName: npm install
-
-#   # Build
-#   - script: node make.js build --task "$(task_pattern)"
-#     displayName: Build
-
-#   # Zip the build output
-#   - powershell: Compress-Archive -Path _build\Tasks\* -DestinationPath _build\tasks.zip
-#     displayName: Zip build output
-
-#   # Publish artifact
-#   - task: PublishBuildArtifacts@1
-#     inputs:
-#       pathToPublish: _build/tasks.zip
-#       artifactName: tasks$(system.jobPositionInPhase)
-#       artifactType: container
-
-#   # # Prepend node
-#   # - powershell: .\ci\use-node-5.ps1 # switch to NodeTool task when bug fix is deployed
-#   #   displayName: Use node $(node_version)
-
-#   # # Test
-#   # - script: node make.js test
-#   #   displayName: Test
-
-#   # - script: node make.js testLegacy --task "$(task_pattern)"
-#   #   displayName: Legacy tests
-
-#   # # Use node 6
-#   # - task: NodeTool@0
-#   #   displayName: Use node 6.10.3
-#   #   inputs:
-#   #     versionSpec: "6.10.3"
-
-#   # # Test
-#   # - script: node make.js test --runner ts
-#   #   displayName: Test
-
-#   # - script: node make.js testLegacy --runner ts --task "$(task_pattern)"
-#   #   displayName: Legacy tests
-
-# - phase: publish_windows
-#   displayName: Publish
-#   dependsOn: buildAll_windows
-#   condition: |
-#     and(
-#       succeeded(),
-#       or(
-#         startsWith(variables['build.sourceBranch'], 'refs/heads/releases/'),
-#         variables.publish
-#       )
-#     )
-#   queue:
-#     demands: agent.os -equals Windows_NT
-#   variables:
-#     system.enableAccessToken: true
-#   steps:
-
-#   # Download artifacts
-#   - task: DownloadBuildArtifact@0
-#     inputs:
-#       artifactName: tasks1
-#   - task: DownloadBuildArtifact@0
-#     inputs:
-#       artifactName: tasks2
-#   - task: DownloadBuildArtifact@0
-#     inputs:
-#       artifactName: tasks3
-#   - task: DownloadBuildArtifact@0
-#     inputs:
-#       artifactName: tasks4
-#   - task: DownloadBuildArtifact@0
-#     inputs:
-#       artifactName: tasks5
-
-#   # - powershell: ./ci/download-individual-tasks.ps1
-#   #   displayName: Download artifacts
-
-#   # - script: npm install
-#   #   displayName: npm install
-
-#   # mkdir nugetTest
-#   # cd nugetTest
-#   # $now = [System.DateTime]::UtcNow
-#   # $version = "0.$('{0:yyyyMMdd}' -f $now).$([System.Math]::Floor($now.timeofday.totalseconds))-m123-commit"
-#   # $nuspecContent = @"
-#   # <?xml version="1.0"?>
-#   # <package>
-#   #   <metadata>
-#   #     <id>vsts-tasks</id>
-#   #     <version>$version</version>
-#   #     <authors>vsts</authors>
-#   #     <owners>vsts</owners>
-#   #     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-#   #     <description>vsts-tasks</description>
-#   #     <releaseNotes>vsts-tasks</releaseNotes>
-#   #     <copyright>Copyright 2017</copyright>
-#   #     <tags />
-#   #     <dependencies />
-#   #   </metadata>
-#   # </package>
-#   # "@
-#   # $nuspecContent | Out-File -FilePath vsts-tasks.nuspec -Encoding utf8
-
-#   # mkdir contentLayout
-#   # mkdir contentLayout/content
-#   # "hello world" > contentLayout/content/hello.txt
-#   # nuget pack vsts-tasks.nuspec -BasePath contentLayout -NoDefaultExcludes
-#   # ##vso[build.updatebuildnumber]build number
-
-# - phase: buildSingle_windows
-#   displayName: Build Single Task (Windows)
-#   condition: and(succeeded(), variables.task)
-#   queue:
-#     demands: agent.os -equals Windows_NT
-#   steps:
-
-#   # # npm install
-#   # - script: npm install
-#   #   displayName: npm install
-
-#   # # Use node 5
-#   # - powershell: .\ci\use-node-5.ps1
-#   #   displayName: Use node 5.10.1
-
-#   # # Build
-#   # - script: node make.js build --task "$(task)"
-#   #   displayName: Build
-
-#   # # Upload artifacts before testing
-#   # - powershell: .\ci\upload-individual-tasks.ps1
-#   #   displayName: Upload artifacts
-#   #   condition: and(succeeded(), variables[BUILD_SOURCEBRANCH])
-
-#   # # oops tests might run before the upload queue drains
-
-#   # # Test
-#   # - script: node make.js test
-#   #   displayName: Test
-
-#   # - script: node make.js testLegacy --task "$(task)"
-#   #   displayName: Legacy tests
-
-#   # # Use node 6
-#   # - task: NodeTool@0
-#   #   displayName: Use node 6.10.3
-#   #   inputs:
-#   #     versionSpec: "6.10.3"
-
-#   # # Test
-#   # - script: node make.js test --runner ts
-#   #   displayName: Test
-
-#   # - script: node make.js testLegacy --runner ts --task "$(task)"
-#   #   displayName: Legacy tests
-
-- phase: abc
-  condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/heads/users'))
+- phase: buildAll_windows
+  displayName: Build all tasks (Windows)
+  condition: and(succeeded(), not(variables.task))
+  queue:
+    demands: agent.os -equals Windows_NT
+    parallel: 2
   steps:
-  - script: echo hello
 
-- phase: def
+  # Slice the tasks (sets TASK_ARRAY and TASK_PATTERN)
+  - script: node .\ci\set-task-slice.js
+    displayName: Set task slice
+
+  # npm install
+  - script: npm install
+    displayName: npm install
+
+  # Build
+  - script: node make.js build --task "$(task_pattern)"
+    displayName: Build
+
+  # Package the slice
+  - script: node .\ci\create-package-slice.js
+
+  # Publish as an artifact
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: _package/package-slice.zip
+      artifactName: package-slice-$(system.jobPositionInPhase)
+      artifactType: container
+
+  # # Prepend node
+  # - powershell: .\ci\use-node-5.ps1 # switch to NodeTool task when bug fix is deployed
+  #   displayName: Use node $(node_version)
+
+  # # Test
+  # - script: node make.js test
+  #   displayName: Test
+
+  # - script: node make.js testLegacy --task "$(task_pattern)"
+  #   displayName: Legacy tests
+
+  # # Use node 6
+  # - task: NodeTool@0
+  #   displayName: Use node 6.10.3
+  #   inputs:
+  #     versionSpec: "6.10.3"
+
+  # # Test
+  # - script: node make.js test --runner ts
+  #   displayName: Test
+
+  # - script: node make.js testLegacy --runner ts --task "$(task_pattern)"
+  #   displayName: Legacy tests
+
+- phase: publish_windows
+  displayName: Publish
+  dependsOn: buildAll_windows
+  condition: |
+    and(
+      succeeded(),
+      or(
+        startsWith(variables['build.sourceBranch'], 'refs/heads/releases/'),
+        variables.publish
+      )
+    )
+  queue:
+    demands: agent.os -equals Windows_NT
+  variables:
+    system.enableAccessToken: true
   steps:
-  - checkout: none
-  - script: set
+
+  # Download artifacts
+  - task: DownloadBuildArtifact@0
+    inputs:
+      artifactName: tasks1
+  - task: DownloadBuildArtifact@0
+    inputs:
+      artifactName: tasks2
+  # - task: DownloadBuildArtifact@0
+  #   inputs:
+  #     artifactName: tasks3
+  # - task: DownloadBuildArtifact@0
+  #   inputs:
+  #     artifactName: tasks4
+  # - task: DownloadBuildArtifact@0
+  #   inputs:
+  #     artifactName: tasks5
+
+  # - powershell: ./ci/download-individual-tasks.ps1
+  #   displayName: Download artifacts
+
+  # - script: npm install
+  #   displayName: npm install
+
+  # mkdir nugetTest
+  # cd nugetTest
+  # $now = [System.DateTime]::UtcNow
+  # $version = "0.$('{0:yyyyMMdd}' -f $now).$([System.Math]::Floor($now.timeofday.totalseconds))-m123-commit"
+  # $nuspecContent = @"
+  # <?xml version="1.0"?>
+  # <package>
+  #   <metadata>
+  #     <id>vsts-tasks</id>
+  #     <version>$version</version>
+  #     <authors>vsts</authors>
+  #     <owners>vsts</owners>
+  #     <requireLicenseAcceptance>false</requireLicenseAcceptance>
+  #     <description>vsts-tasks</description>
+  #     <releaseNotes>vsts-tasks</releaseNotes>
+  #     <copyright>Copyright 2017</copyright>
+  #     <tags />
+  #     <dependencies />
+  #   </metadata>
+  # </package>
+  # "@
+  # $nuspecContent | Out-File -FilePath vsts-tasks.nuspec -Encoding utf8
+
+  # mkdir contentLayout
+  # mkdir contentLayout/content
+  # "hello world" > contentLayout/content/hello.txt
+  # nuget pack vsts-tasks.nuspec -BasePath contentLayout -NoDefaultExcludes
+  # ##vso[build.updatebuildnumber]build number
+
+- phase: buildSingle_windows
+  displayName: Build Single Task (Windows)
+  condition: and(succeeded(), variables.task)
+  queue:
+    demands: agent.os -equals Windows_NT
+  steps:
+
+  # # npm install
+  # - script: npm install
+  #   displayName: npm install
+
+  # # Use node 5
+  # - powershell: .\ci\use-node-5.ps1
+  #   displayName: Use node 5.10.1
+
+  # # Build
+  # - script: node make.js build --task "$(task)"
+  #   displayName: Build
+
+  # # Upload artifacts before testing
+  # - powershell: .\ci\upload-individual-tasks.ps1
+  #   displayName: Upload artifacts
+  #   condition: and(succeeded(), variables[BUILD_SOURCEBRANCH])
+
+  # # oops tests might run before the upload queue drains
+
+  # # Test
+  # - script: node make.js test
+  #   displayName: Test
+
+  # - script: node make.js testLegacy --task "$(task)"
+  #   displayName: Legacy tests
+
+  # # Use node 6
+  # - task: NodeTool@0
+  #   displayName: Use node 6.10.3
+  #   inputs:
+  #     versionSpec: "6.10.3"
+
+  # # Test
+  # - script: node make.js test --runner ts
+  #   displayName: Test
+
+  # - script: node make.js testLegacy --runner ts --task "$(task)"
+  #   displayName: Legacy tests
+
+# - phase: abc
+#   condition: and(succeeded(), startsWith(variables['build.sourceBranch'], 'refs/heads/users'))
+#   steps:
+#   - script: echo hello
+
+# - phase: def
+#   steps:
+#   - checkout: none
+#   - script: set
