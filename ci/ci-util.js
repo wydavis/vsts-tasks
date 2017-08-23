@@ -18,7 +18,7 @@ var ncp = require('child_process');
 var buildPath = path.join(__dirname, '..', '_build');
 var packagePath = path.join(__dirname, '..', '_package');
 var packageSliceZipName = 'package-slice.zip';
-var currentMilestoneLayoutPath = path.join(packagePath, 'current-milestone-layout');
+var currentMilestoneLayoutPath = path.join(packagePath, 'current-milestone-layout', 'contents');
 var aggregateLayoutPath = path.join(packagePath, 'aggregate-layout');
 exports.buildPath = buildPath;
 exports.packagePath = packagePath;
@@ -866,70 +866,70 @@ var linkNonAggregatedLayoutContent = function (sourceRoot, destRoot, metadataOnl
 //     return destPath;
 // }
 
-// var getRefs = function () {
-//     console.log();
-//     console.log('> Getting branch/commit info')
-//     var info = {};
-//     var branch;
-//     if (process.env.TF_BUILD) {
-//         // during CI agent checks out a commit, not a branch.
-//         // $(build.sourceBranch) indicates the branch name, e.g. releases/m108
-//         branch = process.env.BUILD_SOURCEBRANCH;
-//     }
-//     else {
-//         // assumes user has checked out a branch. this is a fairly safe assumption.
-//         // this code only runs during "package" and "publish" build targets, which
-//         // is not typically run locally.
-//         branch = run('git symbolic-ref HEAD', /*inheritStreams*/false, /*noHeader*/true);
-//     }
+var getRefs = function () {
+    console.log();
+    console.log('> Getting branch/commit info')
+    var info = {};
+    var branch;
+    if (process.env.TF_BUILD) {
+        // during CI agent checks out a commit, not a branch.
+        // $(build.sourceBranch) indicates the branch name, e.g. releases/m108
+        branch = process.env.BUILD_SOURCEBRANCH;
+    }
+    else {
+        // assumes user has checked out a branch. this is a fairly safe assumption.
+        // this code only runs during "package" and "publish" build targets, which
+        // is not typically run locally.
+        branch = run('git symbolic-ref HEAD', /*inheritStreams*/false, /*noHeader*/true);
+    }
 
-//     assert(branch, 'branch');
-//     var commit = run('git rev-parse --short=8 HEAD', /*inheritStreams*/false, /*noHeader*/true);
-//     var release;
-//     if (branch.match(/^(refs\/heads\/)?releases\/m[0-9]+$/)) {
-//         release = parseInt(branch.split('/').pop().substr(1));
-//     }
+    assert(branch, 'branch');
+    var commit = run('git rev-parse --short=8 HEAD', /*inheritStreams*/false, /*noHeader*/true);
+    var release;
+    if (branch.match(/^(refs\/heads\/)?releases\/m[0-9]+$/)) {
+        release = parseInt(branch.split('/').pop().substr(1));
+    }
 
-//     // get the ref info for HEAD
-//     var info = {
-//         head: {
-//             branch: branch,  // e.g. refs/heads/releases/m108
-//             commit: commit,  // leading 8 chars only
-//             release: release // e.g. 108 or undefined if not a release branch
-//         },
-//         releases: {}
-//     };
+    // get the ref info for HEAD
+    var info = {
+        head: {
+            branch: branch,  // e.g. refs/heads/releases/m108
+            commit: commit,  // leading 8 chars only
+            release: release // e.g. 108 or undefined if not a release branch
+        },
+        releases: {}
+    };
 
-//     // get the ref info for each release branch within range
-//     run('git branch --list --remotes "origin/releases/m*"', /*inheritStreams*/false, /*noHeader*/true)
-//         .split('\n')
-//         .forEach(function (branch) {
-//             branch = branch.trim();
-//             if (!branch.match(/^origin\/releases\/m[0-9]+$/)) {
-//                 return;
-//             }
+    // get the ref info for each release branch within range
+    run('git branch --list --remotes "origin/releases/m*"', /*inheritStreams*/false, /*noHeader*/true)
+        .split('\n')
+        .forEach(function (branch) {
+            branch = branch.trim();
+            if (!branch.match(/^origin\/releases\/m[0-9]+$/)) {
+                return;
+            }
 
-//             var release = parseInt(branch.split('/').pop().substr(1));
+            var release = parseInt(branch.split('/').pop().substr(1));
 
-//             // filter out releases less than 108 and greater than HEAD
-//             if (release < 108 ||
-//                 release > (info.head.release || 999)) {
+            // filter out releases less than 108 and greater than HEAD
+            if (release < 108 ||
+                release > (info.head.release || 999)) {
 
-//                 return;
-//             }
+                return;
+            }
 
-//             branch = 'refs/remotes/' + branch;
-//             var commit = run(`git rev-parse --short=8 "${branch}"`, /*inheritStreams*/false, /*noHeader*/true);
-//             info.releases[release] = {
-//                 branch: branch,
-//                 commit: commit,
-//                 release: release
-//             };
-//         });
+            branch = 'refs/remotes/' + branch;
+            var commit = run(`git rev-parse --short=8 "${branch}"`, /*inheritStreams*/false, /*noHeader*/true);
+            info.releases[release] = {
+                branch: branch,
+                commit: commit,
+                release: release
+            };
+        });
 
-//     return info;
-// }
-// exports.getRefs = getRefs;
+    return info;
+}
+exports.getRefs = getRefs;
 
 var compressTasks = function (sourceRoot, destPath, individually) {
     assert(sourceRoot, 'sourceRoot');

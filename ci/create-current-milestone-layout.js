@@ -6,6 +6,7 @@ var util = require('./ci-util');
 util.cleanPackagePath();
 
 // initialize the current-milestone layout
+fs.mkdirSync(path.dirname(util.currentMilestoneLayoutPath));
 fs.mkdirSync(util.currentMilestoneLayoutPath);
 
 // mark the layout with a version number.
@@ -36,27 +37,29 @@ for (var i = 0; i < artifactNames.length; i++) {
     });
 }
 
+// get the branch/commit info
+var refs = util.getRefs();
+assert(refs.head.commit, 'refs.head.commit');
+assert(refs.head.branch, 'refs.head.branch');
+var lastBranchSegment = refs.head.branch.split('/').reverse()[0];
+assert(lastBranchSegment, 'lastBranchSegment');
+
+// create the nuspec file
 var nuspecContent =
     `<?xml version="1.0"?>`
-    + `\n`
-  # mkdir nugetTest
-  # cd nugetTest
-  # $now = [System.DateTime]::UtcNow
-  # $version = "0.$('{0:yyyyMMdd}' -f $now).$([System.Math]::Floor($now.timeofday.totalseconds))-m123-commit"
-  # $nuspecContent = @"
-  # <?xml version="1.0"?>
-<package>
-  <metadata>
-    <id>vsts-tasks</id>
-    <version>$version</version>
-    <authors>vsts</authors>
-    <owners>vsts</owners>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>vsts-tasks</description>
-    <releaseNotes>vsts-tasks</releaseNotes>
-    <copyright>Copyright 2017</copyright>
-    <tags />
-    <dependencies />
-  </metadata>
-</package>
-  # $nuspecContent | Out-File -FilePath vsts-tasks.nuspec -Encoding utf8
+    + `\n<package>`
+    + `\n  <metadata>`
+    + `\n    <id>vsts-tasks-milestone</id>`
+    + `\n    <version>0.1.0-${lastBranchSegment}-${refs.head.commit}</version>`
+    + `\n    <authors>vsts</authors>`
+    + `\n    <owners>vsts</owners>`
+    + `\n    <requireLicenseAcceptance>false</requireLicenseAcceptance>`
+    + `\n    <description>vsts-tasks</description>`
+    + `\n    <releaseNotes>vsts-tasks</releaseNotes>`
+    + `\n    <copyright>Copyright 2017</copyright>`
+    + `\n    <tags />`
+    + `\n    <dependencies />`
+    + `\n  </metadata>`
+    + `\n</package>`;
+var nuspecPath = path.join(util.packagePath, 'vsts-tasks-milestone.nuspec');
+fs.writeFileSync(nuspecPath, nuspecContent);

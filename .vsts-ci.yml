@@ -81,15 +81,29 @@ phases:
   #   inputs:
   #     artifactName: package-slice-5
 
-  # Use NuGet 4
-
   # Create current milestone layout
   - script: node .\ci\create-current-milestone-layout.js
     displayName: Create current milestone layout
 
-  # Write current milestone .nuspec - add to above step
+  # Use NuGet 4
+  - task: NuGetToolInstaller@0
+    displayName: Use NuGet 4
+    condition: |
+      and(
+        succeeded(),
+        or(variables.publish, startsWith(variables['build.sourceBranch'], 'refs/heads/releases/')))
+    inputs:
+      versionSpec: 4.0.0
 
-  # Pack current milestone - add to above step
+  # Pack current milestone
+  - script: |
+      cd _package
+      nuget pack vsts-tasks-milestone.nuspec -BasePath current-milestone-layout -NoDefaultExcludes
+    displayName: Pack current milestone
+    condition: |
+      and(
+        succeeded(),
+        or(variables.publish, startsWith(variables['build.sourceBranch'], 'refs/heads/releases/')))
 
   # Publish current milestone package (CONDITIONAL)
 
@@ -97,7 +111,7 @@ phases:
 
   # Restore previous milestones
 
-  # Create aggregate layout (and write .nuspec and pack)
+  # Create aggregate layout (and write .nuspec and pack) - SHOULD BE AN INCREMENTING VERSION NUMBER
 
   # Publish aggregate package (CONDITIONAL)
 
