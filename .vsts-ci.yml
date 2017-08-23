@@ -116,6 +116,8 @@ phases:
 
   # Publish current milestone package (CONDITIONAL)
 
+# TODO: USE GIT LOG TO INFER PREVIOUS RELEASE BRANCHES BASED ON THE CURRENT BRANCH
+
   # Generate packages.config for previous milestones
   - script: node .\ci\create-restore-config.js
     displayName: Create restore config
@@ -126,7 +128,7 @@ phases:
 
   # Publish aggregate package (CONDITIONAL)
 
-  # Publish aggregate package layout
+  # Publish aggregate package layout as an artifact
 
 
   # $now = [System.DateTime]::UtcNow
