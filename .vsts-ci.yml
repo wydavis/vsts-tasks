@@ -66,19 +66,56 @@ phases:
 
   # Set variables
   - powershell: |
+      # Determine whether to publish the current milestone
       $publishCurrentMilestone = ''
       if ($env:BUILD_SOURCEBRANCH -match '$refs/heads/releases/m[0-9]+^') {
-        $publishCurrentMilestone = 'true'
+          $publishCurrentMilestone = 'true'
       }
 
       Write-Host "##vso[task.setVariable variable=publish_current_milestone]$publishCurrentMilestone"
 
+      # Determine whether to publish the aggregate tasks
       $publishAggregate = ''
       if ($env:PUBLISH -or $env:BUILD_SOURCEBRANCH -like 'refs/heads/releases/*') {
-        $publishAggregate = 'true'
+          $publishAggregate = 'true'
       }
 
       Write-Host "##vso[task.setVariable variable=publish_aggregate]$publishAggregate"
+
+      # Determine the task milestone feed ID
+      if ($publishCurrentMilestone) {
+          $taskMilestoneFeedInfo = Invoke-RestMethod -Headers @{ 'Authorization' = "Bearer $env:SYSTEM_ACCESSTOKEN" } -Uri $env:TASK_MILESTONE_FEED_URL
+          $taskMilestoneFeedId = $taskMilestoneFeedInfo.resources |
+              Where-Object { $_.'@type' -eq 'VssFeedId' } |
+              Select-Object -ExpandProperty '@id'
+          if (!$taskMilestoneFeedId -or
+              @($taskMilestoneFeedId).Count -ne 1 -or
+              "$taskMilestoneFeedId" -notmatch '^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' ) {
+
+              Write-Error "Unexpected feed info. Value = $(ConvertTo-Json -InputObject $taskMilestoneFeedInfo)"
+          }
+
+          $taskMilestoneFeedId = $taskMilestoneFeedId.substring(('urn:uuid:'.length))
+          Write-Host "##vso[task.setVariable variable=task_milestone_feed_id]$taskMilestoneFeedId"
+      }
+
+      # Determine the aggregate tasks feed ID
+      if ($publishAggregate) {
+          $aggregateTasksFeedInfo = Invoke-RestMethod -Headers @{ 'Authorization' = "Bearer $env:SYSTEM_ACCESSTOKEN" } -Uri $env:AGGREGATE_TASKS_FEED_URL
+          $aggregateTasksFeedId = $aggregateTasksFeedInfo.resources |
+              Where-Object { $_.'@type' -eq 'VssFeedId' } |
+              Select-Object -ExpandProperty '@id'
+          if (!$aggregateTasksFeedId -or
+              @($aggregateTasksFeedId).Count -ne 1 -or
+              "$aggregateTasksFeedId" -notmatch '^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' ) {
+
+              Write-Error "Unexpected feed info. Value = $(ConvertTo-Json -InputObject $aggregateTasksFeedInfo)"
+          }
+
+          $aggregateTasksFeedId = $aggregateTasksFeedId.substring(('urn:uuid:'.length))
+          Write-Host "##vso[task.setVariable variable=aggregate_tasks_feed_id]$aggregateTasksFeedId"
+      }
+    displayName: Set variables
 
   # Download artifacts
   - task: DownloadBuildArtifact@0
@@ -114,21 +151,58 @@ phases:
     condition: and(succeeded(), variables.publish_current_milestone)
     workingDirectory: _package
 
-  # Publish current milestone package (CONDITIONAL)
-
-# TODO: USE GIT LOG TO INFER PREVIOUS RELEASE BRANCHES BASED ON THE CURRENT BRANCH
+  # Publish current milestone package
+  - task: NuGetCommand@2
+    displayName: Publish current milestone
+    condition: and(succeeded(), variables.publish_current_milestone)
+    inputs:
+      command: push
+      searchPatternPush: _package\vsts-tasks-milestone.nupkg
+      nuGetFeedType: internal
+      feedPublish: $(task_milestone_feed_id)
 
   # Generate packages.config for previous milestones
   - script: node .\ci\create-restore-config.js
     displayName: Create restore config
 
   # Restore previous milestones
+  - task: NuGetCommand@2
+    displayName: Restore previous milestones
+    inputs:
+      command: restore
+      solution: _package\packages.config
+      selectOrConfig: select
+      feedRestore: $(task_milestone_feed_id)
+      includeNuGetOrg: false
+      packagesDirectory: _package\restore # Might require prefix $(system.defaultWorkingDirectory)\
 
-  # Create aggregate layout (and write .nuspec and pack) - SHOULD BE AN INCREMENTING VERSION NUMBER
+  # Create aggregate layout (and write .nuspec) - SHOULD BE AN INCREMENTING VERSION NUMBER
+  - script: TODO
+    displayName: Create aggregate layout
 
-  # Publish aggregate package (CONDITIONAL)
+  # Pack aggregate layout
+  - script: nuget pack vsts-tasks.nuspec -BasePath aggregate-layout -NoDefaultExcludes
+    displayName: Pack aggregate tasks
+    condition: and(succeeded(), variables.publish_aggregate)
+    workingDirectory: _package
 
-  # Publish aggregate package layout as an artifact
+  # Publish aggregate package
+  - task: NuGetCommand@2
+    displayName: Publish aggregate tasks
+    condition: and(succeeded(), variables.publish_aggregate)
+    inputs:
+      command: push
+      searchPatternPush: _package\vsts-tasks.nupkg
+      nuGetFeedType: internal
+      feedPublish: $(aggregate_tasks_feed_id)
+
+  # Publish artifact
+  - task: PublishBuildArtifacts@1
+      inputs:
+      pathToPublish: _package/aggregate-layout/contents
+      artifactName: TaskPackage
+      artifactType: container
+  
 
 
   # $now = [System.DateTime]::UtcNow
